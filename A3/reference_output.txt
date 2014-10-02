@@ -1,0 +1,8 @@
+Lecture: Systemnahe Programmierung
+Assignments:
+A1: Introduction to GIT and Compiler Errors and Warnings 10 points
+A2: Fun with Pointers in C 20 points
+Students:
+Max Mustermann : 1099111
+Jon Doe : 1099222
+
