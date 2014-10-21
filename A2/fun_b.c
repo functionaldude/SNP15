@@ -2,10 +2,23 @@
 #include <stdlib.h>
 
 // TODO: insert for_all function here
+void for_all(int* array, size_t size, int function(int)){
+  int counter = 0;
+  for (; counter <= size; counter++) {
+    array[counter] = function(array[counter]);
+  }
+}
 
 // TODO: insert is_any function function here
-
-
+int is_any(int* array, size_t size, int function(int)){
+  int counter = 0;
+  for (; counter <= size; counter++) {
+    if (function(array[counter])) {
+      return 1;
+    }
+  }
+  return 0;
+}
 
 int div_3(int x) {
   return x % 3 == 0;
