@@ -20,12 +20,12 @@ public:
   void addAssignment(unsigned int number, Assignment* assignment);
 
   friend std::ostream& operator<<(std::ostream& out, const Lecture& lecture);
-
 private:
 
   std::string name_;
 
   typedef std::list<Student>::const_iterator student_it;
+  typedef std::list<Student>::iterator student_it2;
   std::list<Student> students_;
 
   // the assignments:

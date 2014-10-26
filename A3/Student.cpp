@@ -10,19 +10,29 @@ Student::Student(const char* first_name, const char* last_name,
   copyString(&last_name_, last_name);
 }
 
+Student::Student(const class Student &s)
+{
+  first_name_ = s.first_name_;
+  last_name_ = s.last_name_;
+  matriculation_number_=s.matriculation_number_;
+}
+
+
 Student::~Student()
 {
-  delete[] first_name_;
-  delete[] last_name_;
+//  unsigned long len = strlen(first_name_);
+//  delete [len - 1] first_name_;
+//  delete [] first_name_;
+//  delete [] last_name_;
 }
 
 void Student::copyString(char** dest, const char* source)
 {
-  unsigned int str_len = strlen(source);
+  unsigned long str_len = strlen(source);
   char* str = new char[str_len+1];
   strncpy(str, source, str_len);
   str[str_len] = '\0';
-
+  
   *dest = str;
 }
 
@@ -32,4 +42,9 @@ std::ostream& operator<<(std::ostream& out, const Student& student)
       << student.matriculation_number_ << std::endl;
 
   return out;
+}
+
+void Student::deleteNames(){
+  delete [] first_name_;
+  delete [] last_name_;
 }

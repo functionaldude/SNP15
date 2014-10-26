@@ -14,6 +14,9 @@ public:
    * @param m_n
    */
   Student(const char* first_name, const char* last_name, unsigned long m_n);
+  Student(const class Student &s);
+
+  void deleteNames();
 
   virtual ~Student();
 

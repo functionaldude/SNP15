@@ -7,6 +7,26 @@ Lecture::Lecture(std::string name) : name_(name)
 
 Lecture::~Lecture()
 {
+//  schleife!!!!
+//  delete assignments_[0];
+//  delete assignments_[1];
+
+  ass_const_it iterator_assa = assignments_.begin();
+  int counter = 0;
+  while (iterator_assa != assignments_.end()) {
+    delete assignments_[counter];
+    iterator_assa++;
+    counter++;
+  }
+
+  student_it2 iterator_student = students_.begin();
+  while (iterator_student != students_.end()) {
+    iterator_student->deleteNames();
+    iterator_student++;
+  }
+
+
+  
 }
 
 void Lecture::addStudent(Student student)
@@ -27,7 +47,7 @@ std::ostream& operator<<(std::ostream& out, const Lecture& lecture)
 
   for(Lecture::ass_const_it it = lecture.assignments_.begin(); it != lecture.assignments_.end(); it++)
   {
-    out << "A" << it->first << ": " << (*it->second);
+    out << "A" << it->first << ": " << *(it->second);
   }
 
   out << "Students:" << std::endl;
