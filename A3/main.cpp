@@ -4,11 +4,11 @@
 
 void createAssignments(Lecture& lecture)
 {
-//  Assignment *a1 = new Assignment("Introduction to GIT and Compiler Errors and Warnings", 10);
+  Assignment *a1 = new Assignment("Introduction to GIT and Compiler Errors and Warnings", 10);
   Assignment *a2 = new Assignment("Fun with Pointers in C", 20);
-//
-//  lecture.addAssignment(1, a1);
-//  lecture.addAssignment(2, a2);
+
+  lecture.addAssignment(1, a1);
+  lecture.addAssignment(2, a2);
 }
 
 void addStudents(Lecture& lecture)

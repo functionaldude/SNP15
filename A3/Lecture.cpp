@@ -7,16 +7,11 @@ Lecture::Lecture(std::string name) : name_(name)
 
 Lecture::~Lecture()
 {
-//  schleife!!!!
-//  delete assignments_[0];
-//  delete assignments_[1];
-
-  ass_const_it iterator_assa = assignments_.begin();
-  int counter = 0;
+  ass_it iterator_assa = assignments_.begin();
   while (iterator_assa != assignments_.end()) {
-    delete assignments_[counter];
+    delete iterator_assa->second;
+    iterator_assa->~pair();
     iterator_assa++;
-    counter++;
   }
 
   student_it2 iterator_student = students_.begin();
@@ -24,8 +19,6 @@ Lecture::~Lecture()
     iterator_student->deleteNames();
     iterator_student++;
   }
-
-
   
 }
 
