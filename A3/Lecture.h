@@ -25,7 +25,6 @@ private:
   std::string name_;
 
   typedef std::list<Student>::const_iterator student_it;
-  typedef std::list<Student>::iterator student_it2;
   std::list<Student> students_;
 
   // the assignments:

@@ -13,13 +13,6 @@ Lecture::~Lecture()
     iterator_assa->~pair();
     iterator_assa++;
   }
-
-  student_it2 iterator_student = students_.begin();
-  while (iterator_student != students_.end()) {
-    iterator_student->deleteNames();
-    iterator_student++;
-  }
-  
 }
 
 void Lecture::addStudent(Student student)
