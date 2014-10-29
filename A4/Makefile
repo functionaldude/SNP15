@@ -5,3 +5,5 @@ LDLIBS=-lncurses
 CXXFLAGS=${CFLAGS}
 all: pong
 
+pong: pong.c
+	gcc $(CFLAGS) pong.c -o pong $(LDLIBS)

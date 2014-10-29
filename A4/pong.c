@@ -24,6 +24,14 @@
 #define MIN_TERM_HEIGHT 10
 #define MIN_TERM_WIDTH 30
 
+#define PLAYER_UP 'l'
+#define PLAYER_DOWN 'j'
+#define PLAYER_PAUSE 'b'
+#define PLAYER_QUIT 'q'
+
+#define COMP_UP 0xAA
+#define COMP_DOWN 0xBB
+
 typedef enum
 {NONE,QUIT,WIN,LOOSE} Result;
 
@@ -50,6 +58,9 @@ WINDOW *info;
 WINDOW *field;
 
 static bool gameover = false;
+
+unsigned char input_player = 0x00;
+unsigned char input_computer = 0x00;
 
 void draw_window(WINDOW* screen, char* title, bool bottom) {
   int x, y, i;
@@ -90,7 +101,7 @@ void draw_window(WINDOW* screen, char* title, bool bottom) {
   }
   
   // title
-  i = (x- strlen(title)) / 2;
+  i = (x - (int)strlen(title)) / 2;
   mvwprintw(screen, 0, i, title);
 }
 
@@ -166,7 +177,7 @@ double new_edge_speed(double speed)
     speed = LOW_SPEED;
   else
   {
-    srand(time(NULL));
+    srand((unsigned int)time(NULL));
     if (rand() % 2)
       speed = HIGH_SPEED;
     else
@@ -204,28 +215,34 @@ Result gameplay() {
     
     // react to player input
     
-    if (// TODO: quit)
+    if (input_player == PLAYER_QUIT)
     {
       gameover = true;
       result = QUIT;
     }
-    if (// TODO: pause)
+
+    if (input_player == PLAYER_PAUSE)
+    {
       continue;
-    
-    if (//TODO: up && inside_borders(player.y + 1))
+    }
+    if (input_player == PLAYER_UP && inside_borders(player.y + 1))
     {
       player.y++;
+      input_player = 0x00;
     }
-    if (// TODO: down && inside_borders(player.y - 1))
+    if (input_player == PLAYER_DOWN && inside_borders(player.y - 1))
     {
       player.y--;
+      input_player = 0x00;
     }
     
     // react to computer AI
-    if (// TODO: up && inside_borders(computer.y + 1))
+    if (input_computer == COMP_UP && inside_borders(computer.y + 1)){
       computer.y++;
-    if (// TODO: down && inside_borders(computer.y - 1))
+    }
+    if (input_computer == COMP_DOWN && inside_borders(computer.y - 1)){
       computer.y--;
+    }
     
     getmaxyx(field, field_size.y, field_size.x);
 
@@ -341,6 +358,19 @@ Result gameplay() {
  * ...also make sure this thread terminates when quitting
  */
 
+void * THREAD_userinput(void * data){
+  pthread_setcancelstate (PTHREAD_CANCEL_ENABLE, NULL);
+  pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+  int input = 0;
+  unsigned char *thread_status = (unsigned char*)data;
+  while(*thread_status == 0xAA){
+    input = getchar();
+    input_player = (char)input;
+  }
+  return NULL;
+}
+
+
 /**
  * TODO: write ai-computer input method
  * share ai commands with gameplay
@@ -365,6 +395,26 @@ Result gameplay() {
  *   usleep(DELAY);
  * }
  */
+void * THREAD_computerai(void * data){
+  pthread_setcancelstate (PTHREAD_CANCEL_ENABLE, NULL);
+  pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+  unsigned char *thread_status = (unsigned char*)data;
+  while (*thread_status == 0xAA){
+    if (computer.y < ball.y && inside_borders(computer.y + 1)){
+      // computer up
+      input_computer = COMP_UP;
+    }
+    else if (computer.y > ball.y && inside_borders(computer.y - 1)){
+      // computer down
+      input_computer = COMP_DOWN;
+    }else{
+      // clear computer commands
+      input_computer = 0x00;
+    }
+    usleep(DELAY);
+  }
+  return NULL;
+}
 
 int main(int argc, char* argv[]) {
   Result result = NONE;
@@ -391,7 +441,13 @@ int main(int argc, char* argv[]) {
   ball.y = term_size.y/2;
   
   // TODO: create user input and ai-computer threads
-    
+  pthread_t userinput;
+  pthread_t computerinput;
+  unsigned char thread_status = 0xAA;
+
+  pthread_create(&userinput, NULL, THREAD_userinput, (void*) &thread_status);
+  pthread_create(&computerinput, NULL, THREAD_computerai, (void*) &thread_status);
+
   // play the game
   result = gameplay();
   
@@ -401,22 +457,32 @@ int main(int argc, char* argv[]) {
   {
     int pos_x = (field_size.x-strlen(WIN_MSG))/2;
     mvwprintw(field,pos_y,pos_x,WIN_MSG);
+    wrefresh(info);
+    wrefresh(field);
+    sleep(2);
   }
   else if (result == LOOSE)
   {
     int pos_x = (field_size.x-strlen(LOOSE_MSG))/2;
     mvwprintw(field,pos_y,pos_x,LOOSE_MSG);
+    wrefresh(info);
+    wrefresh(field);
+    sleep(2);
   }
-  
-  wrefresh(info);
-  wrefresh(field);
-  
-  // TODO: cleanup
-  
+
+  thread_status = 0xFF;
+
   delwin(field);
   delwin(info);
   
   endwin();
-  
-  return err;
+
+  pthread_cancel(computerinput);
+  pthread_join(computerinput, NULL);
+  perror("COMP joined");
+  pthread_cancel(userinput);
+  pthread_join(userinput, NULL);
+  perror("USER JOINED");
+
+  return 0;
 }
