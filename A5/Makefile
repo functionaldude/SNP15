@@ -2,3 +2,6 @@
 
 CFLAGS+=-Wall -g
 all: simplesh
+
+run:
+	./simplesh
