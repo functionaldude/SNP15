@@ -11,6 +11,7 @@ int exit_code;
 char command[256];
 char args[10][256];
 char dir_name[256];
+int error = 0;
 
 struct pipe_desc{
   int fds[2];
@@ -86,6 +87,10 @@ void handle_command(char* buffer,int buffer_size)
       } else {
         pipes = realloc(pipes, sizeof(pipes) + sizeof(struct pipe_desc));
       }
+      if (pipes == NULL) {
+        perror("Out of memory");
+        return;
+      }
       pipes[pipe_count].direction = 'l';
       pipes[pipe_count].mode = 'w';
       strcpy(pipes[pipe_count].filename, args[i+1]);
@@ -97,6 +102,10 @@ void handle_command(char* buffer,int buffer_size)
         pipes = calloc(1, sizeof(struct pipe_desc));
       } else {
         pipes = realloc(pipes, sizeof(pipes) + sizeof(struct pipe_desc));
+      }
+      if (pipes == NULL) {
+        perror("Out of memory");
+        return;
       }
       pipes[pipe_count].direction = 'l';
       pipes[pipe_count].mode = 'a';
@@ -110,6 +119,10 @@ void handle_command(char* buffer,int buffer_size)
       } else {
         pipes = realloc(pipes, sizeof(pipes) + sizeof(struct pipe_desc));
       }
+      if (pipes == NULL) {
+        perror("Out of memory");
+        return;
+      }
       pipes[pipe_count].direction = 'r';
       pipes[pipe_count].mode = 'w';
       strcpy(pipes[pipe_count].filename, args[i+1]);
@@ -122,6 +135,10 @@ void handle_command(char* buffer,int buffer_size)
       } else {
         pipes = realloc(pipes, sizeof(pipes) + sizeof(struct pipe_desc));
       }
+      if (pipes == NULL) {
+        perror("Out of memory");
+        return;
+      }
       pipes[pipe_count].direction = 'r';
       pipes[pipe_count].mode = 'a';
       strcpy(pipes[pipe_count].filename, args[i+1]);
@@ -133,6 +150,10 @@ void handle_command(char* buffer,int buffer_size)
         pipes = calloc(1, sizeof(struct pipe_desc));
       } else {
         pipes = realloc(pipes, sizeof(pipes) + sizeof(struct pipe_desc));
+      }
+      if (pipes == NULL) {
+        perror("Out of memory");
+        return;
       }
       pipes[pipe_count].direction = 'i';
       pipes[pipe_count].mode = 0x00;
@@ -158,7 +179,10 @@ void handle_command(char* buffer,int buffer_size)
       strcpy(dir_name, args[0]);
       handle_dir(dir_name, 0);
     }
-    chdir(dir_name);
+    error = chdir(dir_name);
+    if (error == -1) {
+      perror("Could not cd");
+    }
     getcwd(dir_name, sizeof(dir_name));
   }
   else if (strcmp(command, "") != 0){
@@ -179,9 +203,13 @@ void handle_command(char* buffer,int buffer_size)
             }
             pipes[i].fds[0] = fileno(fp);
             if (pipes[pipe_count].direction == 'l') {
-              dup2(pipes[i].fds[0], STDIN_FILENO);
+              error = dup2(pipes[i].fds[0], STDIN_FILENO);
             } else {
-              dup2(pipes[i].fds[0], STDOUT_FILENO);
+              error = dup2(pipes[i].fds[0], STDOUT_FILENO);
+            }
+            if (error == -1) {
+              perror("Fd error");
+              exit(-1);
             }
           } else {
             pipe(pipes[i].fds);
@@ -194,11 +222,19 @@ void handle_command(char* buffer,int buffer_size)
               case 0:
                 //second
                 close(pipes[i].fds[1]);
-                dup2(STDIN_FILENO, pipes[i].fds[0]);
+                error = dup2(STDIN_FILENO, pipes[i].fds[0]);
+                if (error == -1) {
+                  perror("Fd error");
+                  exit(-1);
+                }
                 execlp(pipes[i].filename, pipes[i].filename);
               default:
                 close(pipes[i].fds[0]);
-                dup2(STDOUT_FILENO, pipes[i].fds[1]);
+                error = dup2(STDOUT_FILENO, pipes[i].fds[1]);
+                if (error == -1) {
+                  perror("Fd error");
+                  exit(-1);
+                }
                 break;
             }
           }
@@ -255,6 +291,7 @@ int main(int argc, char *argv[])
   memset(buffer, 0x00, sizeof(buffer));
   memset(dir_name, 0x00, sizeof(dir_name));
   memset(command, 0x00, sizeof(command));
+  memset(args, 0x00, sizeof(args));
   char cwd[256]="/";
   exit_code=0;
   running = 1;
