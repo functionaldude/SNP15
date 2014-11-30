@@ -79,7 +79,6 @@ int main(int argc, char* argv[])
   for (unsigned int i = 0; i < num_bosses; i++)
   {
     newB = new Boss(*nameP, i);
-    usleep(WAITINGTIME);
     nameP++;
     if (*nameP == NULL)
       nameP = BossNames;
@@ -91,7 +90,6 @@ int main(int argc, char* argv[])
   for (unsigned int i = 0; i < num_employees; i++)
   {
     newE = new Employee(*nameP, i + Boss::bosses_.size());
-    usleep(WAITINGTIME);
     nameP++;
     if (*nameP == NULL)
       nameP = Names;
