@@ -5,6 +5,10 @@ Person::Person(std::string name, int EmployeeId) :
 {
   log("Employee hired ", EmployeeId);
   name_ = name;
+//  pthread_mutex_init(&queue_m, NULL);
+//  pthread_cond_init(&queue_cv, NULL);
+  queue_m = PTHREAD_MUTEX_INITIALIZER;
+  queue_cv = PTHREAD_COND_INITIALIZER;
 }
 
 Person::~Person()
@@ -45,12 +49,21 @@ bool Person::isBoss()
 
 void Person::waitInQueue()
 {
+  pthread_mutex_lock(&queue_m);
   my_turn_at_the_dishwasher_ = false;
-  while (!my_turn_at_the_dishwasher_)
-    ; // busy wait :(
+//  while (!my_turn_at_the_dishwasher_)
+//    ; // busy wait solved :)
+  while (!my_turn_at_the_dishwasher_) {
+    pthread_cond_wait(&queue_cv, &queue_m);
+  }
+  pthread_mutex_unlock(&queue_m);
+
 }
 
 void Person::wakeup()
 {
+  pthread_mutex_lock(&queue_m);
   my_turn_at_the_dishwasher_ = true;
+  pthread_cond_signal(&queue_cv);
+  pthread_mutex_unlock(&queue_m);
 }

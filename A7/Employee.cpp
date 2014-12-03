@@ -167,6 +167,11 @@ void Employee::startAndWaitForDishwasher(bool needCups)
         log("waiting for dw to finish....");
         // we do not want to do busy wait here. so we let us block until the dw is done
         dw.queueMe(this);
+        pthread_mutex_lock(&dw.finish_m);
+        while (!dw.isFinished()) {
+          pthread_cond_wait(&dw.finish_cv, &dw.finish_m);
+        }
+        pthread_mutex_unlock(&dw.finish_m);
         log(" about to empty dishwasher");
         if (dw.isFinished())
           emptyDishwasher();

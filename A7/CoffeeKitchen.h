@@ -2,7 +2,7 @@
 #define CoffeeKitchen_H
 
 #include "A7.h"
-#include "Thread.h"
+//#include "Thread.h" not nesceserry
 #include "Employee.h"
 #include "Cup.h"
 #include "Cupboard.h"

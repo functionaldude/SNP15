@@ -16,6 +16,7 @@ class Thread
     static std::map<pthread_t, Thread*> threads_;
     static std::string getCurrentThreadName();
     Thread* getCurrentThread();
+    pthread_mutex_t start_lock;
 
   protected:
     friend void ThreadStartHack(Thread* thread);

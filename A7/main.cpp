@@ -24,6 +24,9 @@ const char* BossNames[] =
 Display* display;
 Window mainWindow;
 bool all_threads_created;
+pthread_mutex_t cout_lock;
+pthread_cond_t thread_cv;
+pthread_mutex_t thread_m;
 
 int main(int argc, char* argv[])
 {
@@ -35,6 +38,13 @@ int main(int argc, char* argv[])
 
   // ensure that the display stuff is threadsafe
   assert(XInitThreads());
+
+  //init cout lock
+  cout_lock = PTHREAD_MUTEX_INITIALIZER;
+  //init thread starter
+  thread_cv = PTHREAD_COND_INITIALIZER;
+  thread_m = PTHREAD_MUTEX_INITIALIZER;
+
 
   // open X Display
   display = XOpenDisplay(NULL);
@@ -79,6 +89,7 @@ int main(int argc, char* argv[])
   for (unsigned int i = 0; i < num_bosses; i++)
   {
     newB = new Boss(*nameP, i);
+    usleep(WAITINGTIME);
     nameP++;
     if (*nameP == NULL)
       nameP = BossNames;
@@ -86,10 +97,11 @@ int main(int argc, char* argv[])
   }
 
   nameP = Names;
-  Employee* newE;
+  Employee* newE = nullptr;
   for (unsigned int i = 0; i < num_employees; i++)
   {
     newE = new Employee(*nameP, i + Boss::bosses_.size());
+    usleep(WAITINGTIME);
     nameP++;
     if (*nameP == NULL)
       nameP = Names;
@@ -100,7 +112,10 @@ int main(int argc, char* argv[])
   // this avoids potential race condition during object creation phase
   // now we need to start these beasts
 
+  pthread_mutex_lock(&thread_m);
   all_threads_created = true;
+  pthread_cond_broadcast(&thread_cv);
+  pthread_mutex_unlock(&thread_m);
 
   // our employees never go home. But if we leave main, they get killed.
   // so we are joining one of them (the last employee created above)

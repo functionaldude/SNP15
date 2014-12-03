@@ -27,6 +27,9 @@ class Person : public Thread, public aWindow
     bool hasNoCup();
     bool my_turn_at_the_dishwasher_;
 
+  //mutex
+  pthread_cond_t queue_cv;
+  pthread_mutex_t queue_m;
 };
 
 #endif // PERSON_H

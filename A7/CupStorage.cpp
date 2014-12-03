@@ -5,6 +5,7 @@
 CupStorage::CupStorage(int initCapacity, std::string name) :
     my_logger(name), csname_(name), capacity_(initCapacity), ncleanCups_(0)
 {
+  content_lock = PTHREAD_MUTEX_INITIALIZER;
 }
 
 CupStorage::~CupStorage()
@@ -42,6 +43,7 @@ unsigned int CupStorage::nDirtyCups()
 
 std::string CupStorage::getCupboardContent()
 {
+  pthread_mutex_lock(&content_lock);
   msg_.str(std::string());
 
   if (isEmpty())
@@ -52,7 +54,7 @@ std::string CupStorage::getCupboardContent()
     msg_ << csname() << " contains " << cups_available() << " cups. ";
   msg_ << nCleanCups() << " clean " << nDirtyCups() << " dirty ";
   my_logger.log(msg_.str());
-
+  pthread_mutex_unlock(&content_lock);
   return msg_.str();
 }
 
@@ -84,7 +86,7 @@ Cup* CupStorage::getCup(std::list<Cup*>& list)
     my_logger.log("Sorry. No Cups");
 
   }
-  showCupboardContent();
+  //showCupboardContent();
   return thisCup;
 }
 Cup* CupStorage::getCup()
@@ -107,10 +109,12 @@ bool CupStorage::putCup(Cup* thisCup)
   }
   else
   {
+    pthread_mutex_lock(&content_lock);
     if (thisCup->isDirty())
       dirtyCups_.push_back(thisCup);
     else
       cleanCups_.push_back(thisCup);
+    pthread_mutex_unlock(&content_lock);
 
     my_logger.log("Cup ", thisCup->name(), " put in");
     retval = true;

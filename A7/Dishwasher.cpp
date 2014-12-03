@@ -13,6 +13,12 @@ Dishwasher::Dishwasher(unsigned int numcups, std::string name) :
   finished_ = false;
   started_ = false;
 
+//  pthread_mutex_init(&start_m, NULL);
+//  pthread_cond_init(&start_cv, NULL);
+  start_m = PTHREAD_MUTEX_INITIALIZER;
+  start_cv = PTHREAD_COND_INITIALIZER;
+  finish_m = PTHREAD_MUTEX_INITIALIZER;
+  finish_cv = PTHREAD_COND_INITIALIZER;
 }
 Dishwasher::~Dishwasher()
 {
@@ -48,7 +54,10 @@ bool Dishwasher::pressStartButton()
   }
   else
   {
+    pthread_mutex_lock(&start_m);
     started_ = true;
+    pthread_cond_signal(&start_cv);
+    pthread_mutex_unlock(&start_m);
     log("someone pressed the startbutton");
   }
 
@@ -116,13 +125,16 @@ void Dishwasher::run()
     // we have to wait for the startbutton to be pressed
     showMessage("Dishwasher waits for button to be pressedD");
 
-    while (not started_)
-      ; // busy wait :(
-
+//    while (not started_)
+//      ; // busy wait solved :)
+    pthread_mutex_lock(&start_m);
+    while (not started_) {
+      pthread_cond_wait(&start_cv, &start_m);
+    }
     showMessage("Dishwasher starting");
-
     running_ = true;
     started_ = false;
+    pthread_mutex_unlock(&start_m);
     if (isEmpty())
     {
       log("The intelligent dishwasher denies working without any cups inside");
@@ -149,23 +161,26 @@ void Dishwasher::run()
         log(msg.str());
         usleep(DISHWASHERWAITINGTIMEUNIT);
       }
+
       showMessage("Dishwasher finished");
       addInfo("");
 
       // clean cups
-
+      pthread_mutex_lock(&content_lock);
       while (dirtyCups_.size() > 0)
       {
-
         log("cleaned cup ", dirtyCups_.front()->name());
         dirtyCups_.front()->clean_cup();
         cleanCups_.push_back(dirtyCups_.front());
         dirtyCups_.pop_front();
-
       }
+      pthread_mutex_unlock(&content_lock);
       showCupboardContent();
       running_ = false;
+      pthread_mutex_lock(&finish_m);
       finished_ = true;
+      pthread_cond_broadcast(&finish_cv);
+      pthread_mutex_unlock(&finish_m);
       // wake up users in queue
       while (usersWaiting())
       {

@@ -3,6 +3,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xos.h>
+#include <pthread.h>
 
 #define PORTIONS_PER_PACK (7)
 #define MAXWORKINGTIME (3)
@@ -15,4 +16,7 @@
 
 extern Display* display;
 extern bool all_threads_created;
+extern pthread_mutex_t cout_lock;
+extern pthread_cond_t thread_cv;
+extern pthread_mutex_t thread_m;
 #endif // A7_H

@@ -5,7 +5,6 @@
 
 Cup::Cup(unsigned int cupID) :
     Log()
-
 {
   std::stringstream sstream("");
   sstream << "Cup " << cupID;

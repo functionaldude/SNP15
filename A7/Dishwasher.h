@@ -3,6 +3,7 @@
 
 #include <string>
 #include <deque>
+#include <pthread.h>
 #include "Thread.h"
 #include "aWindow.h"
 #include "Person.h"
@@ -26,6 +27,10 @@ class Dishwasher : public Thread, public CupStorage, public aWindow
 
     void queueMe(Person* e);
     std::string statusText();
+
+    //finish
+    pthread_mutex_t finish_m;
+    pthread_cond_t finish_cv;
   private:
     virtual void run();
     std::deque<Person*> queue_;
@@ -36,6 +41,9 @@ class Dishwasher : public Thread, public CupStorage, public aWindow
     bool usersWaiting();
     int usersWaiting_ = 0;
 
+    //start
+  pthread_mutex_t start_m;
+  pthread_cond_t start_cv;
 };
 
 #endif // DISHWASHER_H

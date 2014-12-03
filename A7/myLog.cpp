@@ -22,7 +22,7 @@ void Log::setLogName(std::string name)
 
 }
 
-void Log::log()
+void Log::writer()
 {
   std::cout << std::endl;
 }
