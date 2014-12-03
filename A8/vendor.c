@@ -9,7 +9,7 @@ void get_cpu_vendor(char* vendor) {
         :"=b"(*data), "=c"(*(data+2)), "=d"(*(data+1))
         :"a"(0x0)
       );
-  vendor[16] = '\0';
+  vendor[15] = '\0';
 }
 
 int main() {
