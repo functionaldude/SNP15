@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-c -Wall -g
+CFLAGS=-c -Wall -std=c99 -g
 TITLE=malloc_example
 
 .PHONY : all clean
