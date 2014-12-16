@@ -4,7 +4,7 @@
 
 
 #include "malloc.h"
-
+#include <unistd.h>
 
 int sum_allocs = 0;
 int sum_frees = 0;
@@ -33,7 +33,7 @@ void *malloc(size_t size){
       //there is a fitting free block
       if (BLOCK_SIZE_MIN <= current->size - size){
         // we can split the block
-        split_block(current,size);
+        split_block(current, size);
       }
       current->free=0;
     } else {
@@ -53,18 +53,18 @@ void *malloc(size_t size){
     }
     base = current;
   }
-  return current->selfptr;
+  return current->raw;
 
 }
 
 block_t get_block(void *ptr){
-  char* temp = ptr;
-  return ptr = temp -= BLOCK_SIZE;
+  char* temp = ptr - 20;
+  return temp;
 }
 
 int valid_address(void *ptr){
   if (base && ptr > base && ptr < sbrk(0)) {
-    return (ptr == get_block(ptr)->selfptr);
+    return (ptr == get_block(ptr)->raw);
   } else {
     return 0;
   }
@@ -91,15 +91,17 @@ void free(void *ptr){
       } else {
         //no more blocks
         base = NULL;
-        brk(current);
       }
+      brk(current);
     }
+  } else {
+    perror("invalid ptr at free");
   }
 }
 
 void copy_block(block_t source, block_t destination) {
-  int *data_source = source->selfptr;
-  int *data_destination = destination->selfptr;
+  int *data_source = source->raw;
+  int *data_destination = destination->raw;
   for (size_t i=0; i*4<source->size && i*4<destination->size; i++){
     data_destination[i] = data_source[i];
   }
@@ -151,7 +153,7 @@ block_t find_free_block(block_t *last_visited, size_t size){
 
 block_t new_block(block_t last, size_t size){
   block_t current = sbrk(0);
-  if (sbrk(BLOCK_SIZE + size) == (void*)-1) {
+  if ((int)sbrk(BLOCK_SIZE + size) < -1) {
     //error
     perror("sbrk error");
     return NULL;
@@ -160,7 +162,7 @@ block_t new_block(block_t last, size_t size){
   current->next = NULL;
   current->prev = last;
   current->free = 0;
-  current->selfptr = current->raw;
+  //current->selfptr = 0xAA;
   if (last) {
     last->next = current;
   }
@@ -171,11 +173,11 @@ void split_block(block_t block_old, size_t size){
   block_t block_new = (block_t)(block_old->raw + size); //raw is char -> byte precision calculation
   block_new->size = block_old->size - size - BLOCK_SIZE;
   block_new->free = 1;
-  block_new->selfptr = block_new->raw;
+  //block_new->selfptr = 0xAA;
   block_new->next = block_old->next;
   block_new->prev = block_old;
   if (block_new->next) {
-    block_new->next->next->prev = block_new;
+    block_new->next->prev = block_new;
   }
 
   block_old->size = size;

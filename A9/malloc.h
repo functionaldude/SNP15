@@ -9,7 +9,7 @@
 #include <stdio.h>
 
 #define BLOCK_SIZE 20 //sizeof wont work
-#define BLOCK_SIZE_MIN BLOCK_SIZE+4
+#define BLOCK_SIZE_MIN BLOCK_SIZE+16
 #define align_pointer(x) (((((x)-1)>>2)<<2)+4)
 
 typedef struct block_s* block_t;
@@ -19,8 +19,6 @@ struct block_s {
   block_t next;
   block_t prev;
   int free;
-  void *selfptr; //magic
-
   char raw[1]; // ghetto method to detect end of metadata block (=start of data)
 };
 
